@@ -1,0 +1,16 @@
+logs
+*.snakemake
+*.fa
+*.gff
+*.gtf
+*.gff3
+*.bed
+*.kdx
+*.tsv
+*.unmap
+*.ht2
+*.gz
+*.fai
+*.tbi
+*.idx
+*~

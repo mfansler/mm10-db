@@ -60,6 +60,20 @@ rule clean_gencode_fasta:
         gzip -cd {input} | sed 's/|.*//' | pigz -p {threads} > {output}
         """
 
+rule kallisto_index:
+    input:
+        "gencode.vM{version}.{collection}.clean.fa.gz"
+    output:
+        "gencode.vM{version}.{collection}.kdx"
+    conda:
+        "envs/kallisto.yaml"
+    resources:
+        mem=16
+    shell:
+        """
+        kallisto index -i {output} {input}
+        """
+
 rule sort_gff:
     input:
         "gencode.vM{version}.annotation.gff3.gz"
