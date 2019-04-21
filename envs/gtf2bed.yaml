@@ -1,0 +1,7 @@
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - ucsc-gtftogenepred=377
+  - ucsc-genepredtobed=377
