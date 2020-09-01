@@ -1,5 +1,13 @@
 #!/usr/bin/env snakemake
 
+configfile: "config.yaml"
+
+import os
+
+# make sure the tmp directory exists
+os.makedirs(config["tmp_dir"], exist_ok=True)
+
+
 rule all:
     input: ""
 
@@ -58,6 +66,15 @@ rule clean_gencode_fasta:
     shell:
         """
         gzip -cd {input} | sed 's/|.*//' | pigz -p {threads} > {output}
+        """
+
+rule ucsc_fasta:
+    output:
+        "ucsc.mm10.fa"
+    shell:
+        """
+        wget -qO - 'http://hgdownload.soe.ucsc.edu/goldenPath/mm10/bigZips/mm10.fa.gz' |
+        gunzip -c > {output}
         """
 
 rule kallisto_index:
@@ -144,4 +161,74 @@ rule gtf_tx2gene:
     shell:
         """
         gzip -cd {input} | awk -f scripts/gtf_tx2gene.awk > {output}
+        """
+
+rule qapa_bed:
+    output:
+        "qapa_3utrs.gencode_VM22.mm10.bed"
+    shell:
+        """
+        wget -qO - 'https://github.com/morrislab/qapa/releases/download/v1.3.0/qapa_3utrs.gencode_VM22.mm10.bed.gz' |
+        gunzip -c > {output}
+        """
+
+rule qapa_fasta:
+    input:
+        fa="ucsc.mm10.fa",
+        bed="qapa_3utrs.gencode_VM22.mm10.bed"
+    output:
+        "qapa_3utrs.gencode_VM22.mm10.fa"
+    singularity:
+        "docker://brianyee/qapa:1.3.0"
+    shell:
+        """
+        qapa fasta -f {input.fa} {input.bed} {output}
+        """
+
+rule qapa_salmon_idx:
+    input:
+        "qapa_3utrs.gencode_VM22.mm10.fa"
+    output:
+        directory("qapa_3utrs.gencode_VM22.mm10.sidx")
+    conda: "envs/salmon.yaml"
+    resources:
+        mem=8
+    shell:
+        """
+        salmon index -t {input} -i {output}
+        """
+
+rule qapa_salmon_decoy_idx:
+    input:
+        qapa=rules.qapa_fasta.output,
+        genome=rules.ucsc_fasta.output
+    params:
+        fa=config['tmp_dir'] + "/mm10_plus_qapa.fasta",
+        decoy=config['tmp_dir'] + "/decoys.txt"
+    output:
+        directory("qapa_3utrs.gencode_VM22.mm10.decoy.sidx")
+    threads: 12
+    resources:
+        mem=3
+    conda: "envs/salmon.yaml"
+    shell:
+        """
+        grep "^>" {input.genome} | cut -d ' ' -f 1 > {params.decoy}
+        sed -i.bak -e 's/>//g' {params.decoy}
+        cat {input.qapa} {input.genome} > {params.fa}
+        salmon index -t {params.fa} -d {params.decoy} -p {threads} -i {output}
+        rm {params.decoy}
+        rm {params.fa}
+        """
+
+rule ensembl_ids:
+    output:
+        "ensembl_identifiers_v{version}.txt"
+    shell:
+        """
+        mysql --user anonymous --host=martdb.ensembl.org --port=5316 -A ensembl_mart_{wildcards.version} \\
+        -e "select stable_id_1023 as 'Gene stable ID', stable_id_1066 as 'Transcript stable ID', \\
+        biotype_1020 as 'Gene type', biotype_1064 as 'Transcript type', \\
+        display_label_1074 as 'Gene name' from mmusculus_gene_ensembl__transcript__main" \\
+        > {output}
         """

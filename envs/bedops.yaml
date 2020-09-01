@@ -1,0 +1,5 @@
+channels:
+  - bioconda
+  - defaults
+dependencies:
+  - bedops=2.4.35

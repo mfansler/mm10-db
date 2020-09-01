@@ -1,5 +1,5 @@
 logs
-*.snakemake
+.snakemake
 *.fa
 *.gff
 *.gtf
