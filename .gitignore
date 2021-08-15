@@ -1,11 +1,15 @@
 logs
 .snakemake
 *.fa
+*.fasta
+*.fq
+*.fastq
 *.gff
 *.gtf
 *.gff3
 *.bed
 *.kdx
+*.kidx
 *.tsv
 *.unmap
 *.ht2

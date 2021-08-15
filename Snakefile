@@ -7,7 +7,6 @@ import os
 # make sure the tmp directory exists
 os.makedirs(config["tmp_dir"], exist_ok=True)
 
-
 rule all:
     input: ""
 
@@ -232,3 +231,15 @@ rule ensembl_ids:
         display_label_1074 as 'Gene name' from mmusculus_gene_ensembl__transcript__main" \\
         > {output}
         """
+
+rule txcutr_txdb_ensgene:
+    output:
+        gtf="txdb.mm10.ensGene.txcutr.w{width}.gtf",
+        fa="txdb.mm10.ensGene.txcutr.w{width}.fa"
+    wildcard_constraints:
+        width="\d+"
+    threads: 20
+    resources:
+        mem_mb=2000
+    conda: "envs/txcutr.yaml"
+    script: "scripts/txcutr_txdb_ensgene.R"

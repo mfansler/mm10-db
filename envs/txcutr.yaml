@@ -1,0 +1,12 @@
+name: txcutr
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - r-base=4.1
+  - merv::r-txcutr=0.1
+  
+  # mm10 annotation and sequence
+  - bioconductor-txdb.mmusculus.ucsc.mm10.ensgene
+  - bioconductor-bsgenome.mmusculus.ucsc.mm10
