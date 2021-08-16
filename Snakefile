@@ -240,6 +240,34 @@ rule txcutr_txdb_ensgene:
         width="\d+"
     threads: 20
     resources:
-        mem_mb=2000
+        mem_mb=3000
     conda: "envs/txcutr.yaml"
     script: "scripts/txcutr_txdb_ensgene.R"
+
+rule txcutr_gencode_gtf:
+    input:
+        gtf="gencode.{version}.gtf.gz"
+    output:
+        gtf="gencode.{version}.txcutr.w{width}.gtf",
+        fa="gencode.{version}.txcutr.w{width}.fa"
+    wildcard_constraints:
+        width="\d+"
+    threads: 20
+    resources:
+        mem_mb=4000
+    conda: "envs/txcutr.yaml"
+    script: "scripts/txcutr_gtf.R"
+
+rule kallisto_index_txcutr:
+    input:
+        "gencode.vM{version}.{collection}.txcutr.w{width}.fa"
+    output:
+        "gencode.vM{version}.{collection}.txcutr.w{width}.kdx"
+    container:
+        "docker://mfansler/scutr-quant:0.1.5"
+    resources:
+        mem_mb=16000
+    shell:
+        """
+        kallisto index -i {output} {input}
+        """
